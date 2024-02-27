@@ -30,8 +30,12 @@ function decodeHTML(input) {
 async function getTitle(url) {
     try {
         const response = await fetch(url);
+        // Skip Forbidden, Unauthorized
+        if (response.status === 403 || response.status === 401) {
+            return '';
+        }
         const responseText = await response.text();
-        const matches = responseText.match(DEFAULT_REGEX.htmlTitleTag);
+        const matches = DEFAULT_REGEX.htmlTitleTag.exec(responseText);
         if (matches !== null && matches.length > 1 && matches[2] !== null) {
             return decodeHTML(matches[2].trim());
         }
@@ -85,8 +89,8 @@ async function getFormatSettings() {
     return FORMAT_SETTINGS[preferredFormat];
 }
 
-async function parseBlockForLink(uuid: string) {
-    if (!uuid) {
+async function parseBlockForLink(uuid: string | null = null) {
+    if (!uuid || uuid === '' || uuid === null) {
         return;
     }
 
@@ -96,7 +100,7 @@ async function parseBlockForLink(uuid: string) {
     }
 
     let text = rawBlock.content;
-    const urls = text.match(DEFAULT_REGEX.line);
+    const urls = DEFAULT_REGEX.line.exec(text);
     if (!urls) {
         return;
     }
@@ -159,28 +163,43 @@ const main = async () => {
         extLinkEl.insertAdjacentElement('afterbegin', fav);
     };
 
-    // Favicons observer
     const extLinksObserverConfig = { childList: true, subtree: true };
-    const extLinksObserver = new MutationObserver((mutationsList, observer) => {
-        for (let i = 0; i < mutationsList.length; i++) {
-            const addedNode = mutationsList[i].addedNodes[0];
-            if (addedNode && addedNode.childNodes.length) {
+    const extLinksObserver = new MutationObserver((mutationsList, _) => {
+        for (const element of mutationsList) {
+            const addedNode = element.addedNodes[0] as Element;
+            if (addedNode?.childNodes.length) {
                 const extLinkList = addedNode.querySelectorAll('.external-link');
                 if (extLinkList.length) {
                     extLinksObserver.disconnect();
-                    for (let i = 0; i < extLinkList.length; i++) {
-                        setFavicon(extLinkList[i]);
-                    }
+                    extLinkList.forEach((extLink) => {
+                        const extLinkElement = extLink as HTMLAnchorElement;
+                        setFavicon(extLinkElement);
+                    });
 
-                    extLinksObserver.observe(appContainer, extLinksObserverConfig);
+                    (async (addedNode) => {
+                        const blockId = addedNode.querySelectorAll('.block-content')[0].getAttribute('blockid')
+                        try {
+                            if (blockId) {
+                                await parseBlockForLink(blockId);
+                            }
+                        } catch (error) {
+                            console.error('Error in async task:', error)
+                        }
+                    })(addedNode);
+
+                    if (appContainer) {
+                        extLinksObserver.observe(appContainer, extLinksObserverConfig)
+                    }
                 }
             }
         }
     });
 
     setTimeout(() => {
-        doc.querySelectorAll('.external-link')?.forEach(extLink => setFavicon(extLink));
-        extLinksObserver.observe(appContainer, extLinksObserverConfig);
+        doc.querySelectorAll('.external-link')?.forEach(extLink => setFavicon(extLink as HTMLAnchorElement));
+        if (appContainer) {
+            extLinksObserver.observe(appContainer, extLinksObserverConfig);
+        }
     }, 500);
 
     logseq.Editor.registerBlockContextMenuItem('Format url titles', async ({ uuid }) => {
@@ -189,17 +208,7 @@ const main = async () => {
         extLinkList.forEach(extLink => setFavicon(extLink));
     });
 
-    const blockSet = new Set();
-    logseq.DB.onChanged(async (e) => {
-        if (e.txMeta?.outlinerOp !== 'insertBlocks') {
-            blockSet.add(e.blocks[0]?.uuid);
-            doc.querySelectorAll('.external-link')?.forEach(extLink => setFavicon(extLink));
-            return;
-        }
-
-        await blockSet.forEach((uuid) => parseBlockForLink(uuid));
-        blockSet.clear();
-    });
+    doc.querySelectorAll('.external-link')?.forEach(extLink => setFavicon(extLink as HTMLAnchorElement));
 };
 
 logseq.ready(main).catch(console.error);

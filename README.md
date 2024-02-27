@@ -1,4 +1,4 @@
-## Logseq URL Title
+## Logseq URL Title Tagger
 
 Automatically fetches the title of a website and wraps it into markdown link format. Also, renders the favicon of the url next to it.
 

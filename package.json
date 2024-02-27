@@ -1,5 +1,5 @@
 {
-    "name": "logseq-url-title-tagger",
+    "name": "url-title-tagger",
     "version": "1.0.0",
     "author": "imjn",
     "description": "Automatically fetches the title of a website and wraps it into markdown link format. Also, renders the favicon of the url next to it.",

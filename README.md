@@ -1,6 +1,4 @@
-## Logseq Plugin Automatic URL title
-
-#### :warning: Alert: I won't maintain this repo anymore. I consider it complete because it fulfills the requirements that I need. If you need an additional feature or bug to be fixed please feel free to fork the repo and go crazy with it. Thank you :)
+## Logseq URL Title
 
 Automatically fetches the title of a website and wraps it into markdown link format. Also, renders the favicon of the url next to it.
 
@@ -16,9 +14,7 @@ To disable the favicon, override the `--favicons` variable.
 
 ## Credits
 
-- https://github.com/sawhney17/logseq-automatic-linker
-- https://github.com/zolrath/obsidian-auto-link-title
-- https://github.com/yoyurec/logseq-solarized-extended-theme
+Forked from https://github.com/0x7b1/logseq-plugin-automatic-url-title
 
 ## License
 

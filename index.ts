@@ -178,13 +178,14 @@ const main = async () => {
 
                     (async (addedNode) => {
                         const blockId = addedNode.querySelectorAll('.block-content')[0].getAttribute('blockid')
-                        try {
-                            if (blockId) {
+                        if (blockId) {
+                            try {
                                 await parseBlockForLink(blockId);
+                            } catch (error) {
+                                console.error('Error in async task:', error)
                             }
-                        } catch (error) {
-                            console.error('Error in async task:', error)
                         }
+                        
                     })(addedNode);
 
                     if (appContainer) {

@@ -4,7 +4,7 @@
     "author": "imjn",
     "description": "Automatically fetches the title of a website and wraps it into markdown link format. Also, renders the favicon of the url next to it.",
     "main": "dist/index.html",
-    "keywords": [],
+    "keywords": ["url", "title", "markdown"],
     "license": "MIT",
     "logseq": {
         "id": "url-title-tagger",

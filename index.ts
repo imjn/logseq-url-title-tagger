@@ -171,16 +171,17 @@ const main = async () => {
                 const extLinkList = addedNode.querySelectorAll('.external-link');
                 if (extLinkList.length) {
                     extLinksObserver.disconnect();
-                    extLinkList.forEach((extLink) => {
-                        const extLinkElement = extLink as HTMLAnchorElement;
-                        setFavicon(extLinkElement);
-                    });
 
                     (async (addedNode) => {
                         const blockId = addedNode.querySelectorAll('.block-content')[0].getAttribute('blockid')
                         if (blockId) {
                             try {
                                 await parseBlockForLink(blockId);
+
+                                extLinkList.forEach((extLink) => {
+                                    const extLinkElement = extLink as HTMLAnchorElement;
+                                    setFavicon(extLinkElement);
+                                });
                             } catch (error) {
                                 console.error('Error in async task:', error)
                             }

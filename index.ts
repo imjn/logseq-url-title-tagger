@@ -3,7 +3,7 @@ import '@logseq/libs';
 const DEFAULT_REGEX = {
     wrappedInCommand: /(\{\{(video)\s*(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})\s*\}\})/gi,
     htmlTitleTag: /<title(\s[^>]+)*>([^<]*)<\/title>/,
-    line: /\bhttps?:\/\/(?:www\.)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(?::\d{1,5})?(?:\/[^\s]*)?\b/,
+    url: /\bhttps?:\/\/(?:www\.)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(?::\d{1,5})?(?:\/[^\s]*)?\b/gi,
     imageExtension: /\.(gif|jpe?g|tiff?|png|webp|bmp|tga|psd|ai)$/i,
 };
 
@@ -40,7 +40,7 @@ async function getTitle(url) {
             return decodeHTML(matches[2].trim());
         }
     } catch (e) {
-        console.error(e);
+        console.error('Error fetching title:', e);
     }
 
     return '';
@@ -96,17 +96,25 @@ async function parseBlockForLink(uuid: string | null = null) {
 
     const rawBlock = await logseq.Editor.getBlock(uuid);
     if (!rawBlock) {
+        console.error('⛔️ Block not found');
         return;
     }
 
+    let match;
+    const urls: string[] = [];
+
     let text = rawBlock.content;
-    const urls = DEFAULT_REGEX.line.exec(text);
+    while ((match = DEFAULT_REGEX.url.exec(text)) !== null) {
+        urls.push(match[0]);
+    }
     if (!urls) {
+        console.error('⛔️ No urls found');
         return;
     }
 
     const formatSettings = await getFormatSettings();
     if (!formatSettings) {
+        console.error('⛔️ No format settings found');
         return;
     }
 
@@ -168,8 +176,7 @@ const main = async () => {
         for (const element of mutationsList) {
             const addedNode = element.addedNodes[0] as Element;
             if (addedNode?.childNodes.length) {
-                const extLinkList = addedNode.querySelectorAll('.external-link');
-                if (extLinkList.length) {
+                if (addedNode.querySelector('.external-link')) {
                     extLinksObserver.disconnect();
 
                     (async (addedNode) => {
@@ -178,7 +185,7 @@ const main = async () => {
                             try {
                                 await parseBlockForLink(blockId);
 
-                                extLinkList.forEach((extLink) => {
+                                addedNode.querySelectorAll('.external-link').forEach((extLink) => {
                                     const extLinkElement = extLink as HTMLAnchorElement;
                                     setFavicon(extLinkElement);
                                 });

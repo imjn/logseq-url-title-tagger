@@ -125,7 +125,6 @@ async function parseBlockForLink(uuid: string | null = null) {
         if (isAlreadyFormatted(text, url, urlIndex, formatSettings.formatBeginning) || isImage(url) || isWrappedInCommand(text, url)) {
             continue;
         }
-
         const updatedTitle = await convertUrlToMarkdownLink(url, text, urlIndex, offset, formatSettings.applyFormat);
         text = updatedTitle.text;
         offset = updatedTitle.offset;
@@ -150,7 +149,18 @@ const main = async () => {
         width: 16px;
         height: 16px;
         margin: -3px 7px 0 0;
-    }`);
+    }
+    .loading-indicator {
+        display: var(--indicator, inline-block);
+        width: 16px;
+        height: 16px;
+        border-radius: 50%;
+        border: 2px solid #f3f3f3;
+        border-top: 2px solid #3498db;
+        animation: spin 2s linear infinite;
+        margin: -3px 7px 0 0;
+    }
+    `);
 
     const doc = parent.document;
     const appContainer = doc.getElementById('app-container');
@@ -159,17 +169,30 @@ const main = async () => {
     const setFavicon = (extLinkEl: HTMLAnchorElement) => {
         const oldFav = extLinkEl.querySelector('.external-link-img');
         if (oldFav) {
+            console.log('Removing old favicon:', oldFav);
             oldFav.remove();
         }
         const { hostname } = new URL(extLinkEl.href);
         const faviconValue = `https://www.google.com/s2/favicons?domain=${hostname}&sz=32`;
-        const fav = doc.createElement('img');
+        const fav = document.createElement('img');
         fav.src = faviconValue;
         fav.width = 16;
         fav.height = 16;
         fav.classList.add('external-link-img');
         extLinkEl.insertAdjacentElement('afterbegin', fav);
     };
+
+    const setLoadingIndicator = (extLinkEl: HTMLAnchorElement, isLoading: boolean) => {
+        const oldLoadingIndicator = extLinkEl.querySelector('.loading-indicator');
+        if (oldLoadingIndicator) {
+            oldLoadingIndicator.remove();
+        }
+        if (isLoading) {
+            const loadingIndicator = doc.createElement('div');
+            loadingIndicator.classList.add('loading-indicator');
+            extLinkEl.insertAdjacentElement('afterbegin', loadingIndicator);
+        }
+    }
 
     const extLinksObserverConfig = { childList: true, subtree: true };
     const extLinksObserver = new MutationObserver((mutationsList, _) => {
@@ -183,11 +206,17 @@ const main = async () => {
                         const blockId = addedNode.querySelectorAll('.block-content')[0].getAttribute('blockid')
                         if (blockId) {
                             try {
+                                addedNode.querySelectorAll('.external-link').forEach((extLink) => {
+                                    const extLinkElement = extLink as HTMLAnchorElement;
+                                    setLoadingIndicator(extLinkElement, true);
+                                });
+
                                 await parseBlockForLink(blockId);
 
                                 addedNode.querySelectorAll('.external-link').forEach((extLink) => {
                                     const extLinkElement = extLink as HTMLAnchorElement;
                                     setFavicon(extLinkElement);
+                                    setLoadingIndicator(extLinkElement, false);
                                 });
                             } catch (error) {
                                 console.error('Error in async task:', error)

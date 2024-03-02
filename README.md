@@ -15,6 +15,7 @@ To disable the favicon and the loading indicator, override the variables.
 :root {
   --favicons: none;
   --indicator: none;
+  --indicator-color: #AA4A44;
 }
 ```
 

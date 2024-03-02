@@ -156,7 +156,7 @@ const main = async () => {
         height: 16px;
         border-radius: 50%;
         border: 2px solid #f3f3f3;
-        border-top: 2px solid #3498db;
+        border-top: 2px solid var(--indicator-color, #3498db);
         animation: spin 2s linear infinite;
         margin: -3px 7px 0 0;
     }

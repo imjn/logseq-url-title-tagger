@@ -7,6 +7,9 @@ The Logseq URL Title Tagger automatically fetches website titles, formats them i
 ![demo](demo.gif)
 
 To disable the favicon and the loading indicator, override the variables.
+- Open the Logseq desktop app and go to the setting page.
+- Find the `Custom theme` option and click the `Edit custom.css` button.
+- And you can add custom css like below.
 
 ```css
 :root {

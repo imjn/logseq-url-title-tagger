@@ -1,16 +1,23 @@
+<img src="icon.png" style="width: 100px; border-radius: 20px;">
+
 ## Logseq URL Title Tagger
 
-Automatically fetches the title of a website and wraps it into markdown link format. Also, renders the favicon of the url next to it.
+The Logseq URL Title Tagger automatically fetches website titles, formats them into markdown links, and displays the favicon next to it.
 
 ![demo](demo.gif)
 
-To disable the favicon, override the `--favicons` variable.
+To disable the favicon and the loading indicator, override the variables.
 
 ```css
 :root {
   --favicons: none;
+  --indicator: none;
 }
 ```
+
+## Issues?
+
+If you found any bugs or got any feature request please open an issue on this repository.
 
 ## Credits
 

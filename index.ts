@@ -2,7 +2,6 @@ import '@logseq/libs';
 
 const DEFAULT_REGEX = {
     wrappedInCommand: /(\{\{(video)\s*(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})\s*\}\})/gi,
-    htmlTitleTag: /<title(\s[^>]+)*>([^<]*)<\/title>/,
     url: /\bhttps?:\/\/(?:www\.)?[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}(?::\d{1,5})?(?:\/[^\s]*)?(?=\s|$)/gi,
     imageExtension: /\.(gif|jpe?g|tiff?|png|webp|bmp|tga|psd|ai)$/i,
 };
@@ -18,15 +17,6 @@ const FORMAT_SETTINGS = {
     },
 };
 
-function decodeHTML(input) {
-    if (!input) {
-        return '';
-    }
-
-    const doc = new DOMParser().parseFromString(input, 'text/html');
-    return doc.documentElement.textContent;
-}
-
 async function getTitle(url) {
     try {
         const response = await fetch(url);
@@ -34,11 +24,23 @@ async function getTitle(url) {
         if (response.status === 403 || response.status === 401) {
             return '';
         }
-        const responseText = await response.text();
-        const matches = DEFAULT_REGEX.htmlTitleTag.exec(responseText);
-        if (matches !== null && matches.length > 1 && matches[2] !== null) {
-            return decodeHTML(matches[2].trim());
+        if (response == null) return
+
+        const contentType = response.headers.get('Content-Type')
+        const charset = contentType !== null && contentType.includes('charset=') ? contentType.split('charset=')[1] : 'UTF-8';
+
+        const buffer = await response.arrayBuffer();
+        const html = await new TextDecoder(charset).decode(new Uint8Array(buffer))
+
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        const title = doc.querySelector('title')
+
+        if (title !== null) {
+            return title.innerText
         }
+
+
     } catch (e) {
         console.error('Error fetching title:', e);
     }
@@ -222,7 +224,7 @@ const main = async () => {
                                 console.error('Error in async task:', error)
                             }
                         }
-                        
+
                     })(addedNode);
 
                     if (appContainer) {

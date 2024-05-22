@@ -1,0 +1,5 @@
+// host: special query
+{
+    "github.com": "h1.heading-element",
+    "reddit.com": "h1"
+}

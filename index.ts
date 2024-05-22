@@ -1,5 +1,17 @@
 import '@logseq/libs';
 import hosts from './hosts.json'
+import { SettingSchemaDesc } from '@logseq/libs/dist/LSPlugin'
+
+
+const settings: SettingSchemaDesc[] = [{
+    key: 'uttHosts',
+    type: 'object',
+    default: hosts,
+    title: 'Hosts',
+    description: 'Special CSS Selectors to find title in specific hosts'
+}]
+
+logseq.useSettingsSchema(settings)
 
 const DEFAULT_REGEX = {
     wrappedInCommand: /(\{\{(video)\s*(https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|www\.[a-zA-Z0-9][a-zA-Z0-9-]+[a-zA-Z0-9]\.[^\s]{2,}|https?:\/\/(?:www\.|(?!www))[a-zA-Z0-9]+\.[^\s]{2,}|www\.[a-zA-Z0-9]+\.[^\s]{2,})\s*\}\})/gi,
@@ -38,7 +50,7 @@ async function getTitle(url) {
 
         // try to find a title in a special way on json
         const host = new URL(url).host.replace('www.', '')
-        if (host in hosts) {
+        if (host in logseq.settings?.uttHosts) {
             const customSelector = doc.querySelector(hosts[host])
             if (customSelector !== null) return customSelector.innerText.trim()
         }
